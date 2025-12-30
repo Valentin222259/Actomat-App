@@ -28,7 +28,7 @@ app.post("/extract", upload.single("file"), async (req, res) => {
     const imageBase64 = imageData.toString("base64");
 
     // 2. Selectăm modelul Gemini
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+    const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
 
     // 3. Trimitem prompt-ul
     const prompt = `
