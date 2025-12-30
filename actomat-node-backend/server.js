@@ -1,78 +1,83 @@
+require("dotenv").config();
 const express = require("express");
 const multer = require("multer");
-const cors = require("cors");
 const { GoogleGenerativeAI } = require("@google/generative-ai");
-require("dotenv").config(); // Încarcă variabilele din .env
+const fs = require("fs");
+const cors = require("cors");
 
 const app = express();
-const port = 8000;
+const upload = multer({ dest: "uploads/" });
 
-// 1. Configure Middleware
-app.use(cors()); // Allow requests from frontend
+// Configurare CORS (permite frontend-ului să comunice)
+app.use(cors());
 app.use(express.json());
 
-// 2. Configure Multer (for RAM memory)
-const upload = multer({ storage: multer.memoryStorage() });
-
-// 3. Config Gemini AI
-// Verify the key
-if (!process.env.GEMINI_API_KEY) {
-  console.error("❌ EROARE: Lipsește GEMINI_API_KEY din fișierul .env!");
-  process.exit(1);
-}
-
+// Inițializare AI
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-// Using model flash-latest
-const model = genAI.getGenerativeModel({
-  model: "gemini-1.5-flash",
-  generationConfig: { responseMimeType: "application/json" },
-});
 
-// 4. Endpoint Extract
+// Endpoint-ul principal de Extragere
 app.post("/extract", upload.single("file"), async (req, res) => {
   try {
-    console.log("📥 Am primit o cerere de procesare...");
-
     if (!req.file) {
-      return res.status(400).json({ error: "Nu ai trimis niciun fișier!" });
+      return res.status(400).json({ error: "Nu ai încărcat niciun fișier." });
     }
 
-    const imagePart = {
-      inlineData: {
-        data: req.file.buffer.toString("base64"),
-        mimeType: req.file.mimetype,
-      },
-    };
+    // 1. Pregătim imaginea pentru AI
+    const imagePath = req.file.path;
+    const imageData = fs.readFileSync(imagePath);
+    const imageBase64 = imageData.toString("base64");
 
+    // 2. Selectăm modelul Gemini
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+
+    // 3. Trimitem prompt-ul
     const prompt = `
-            Analizează această Carte de Identitate Românească.
-            Extrage datele și returnează un JSON strict cu cheile:
-            {
-                "nume": "Nume de familie",
-                "prenume": "Prenume",
-                "CNP": "Cod numeric personal",
-                "data_nasterii": "ZZ.LL.AAAA",
-                "valabilitate": "ZZ.LL.AAAA"
-            }
-            Dacă un câmp nu e clar, pune valoarea null.
-        `;
+      Extrage următoarele date din acest buletin românesc (carte de identitate) și returnează DOAR un JSON simplu, fără alte texte:
+      - CNP
+      - Nume
+      - Prenume
+      - Cetatenie
+      - Locul nasterii
+      - Domiciliu
+      - Emis de
+      - Data nasterii
+      - Data emiterii
+      - Data expirarii
+      - Serie
+      - Numar
+      - Sex
+    `;
 
-    console.log("🤖 Trimit imaginea la Gemini...");
-    const result = await model.generateContent([prompt, imagePart]);
+    const result = await model.generateContent([
+      prompt,
+      {
+        inlineData: {
+          data: imageBase64,
+          mimeType: req.file.mimetype,
+        },
+      },
+    ]);
+
     const response = await result.response;
     const text = response.text();
 
-    console.log("✅ Răspuns primit!");
+    // 4. Curățăm răspunsul (ștergem ```json și ```)
+    const cleanText = text.replace(/```json|```/g, "").trim();
+    const data = JSON.parse(cleanText);
 
-    // Sending JSON back to frontend
-    res.json(JSON.parse(text));
+    // 5. Ștergem fișierul temporar
+    fs.unlinkSync(imagePath);
+
+    // 6. Returnăm datele la Frontend
+    res.json(data);
   } catch (error) {
-    console.error("❌ Eroare server:", error);
-    res.status(500).json({ error: error.message });
+    console.error("Eroare server:", error);
+    res.status(500).json({ error: "Eroare la procesarea imaginii." });
   }
 });
 
-// 5. Start server
-app.listen(port, () => {
-  console.log(`🚀 Serverul Node.js rulează pe http://localhost:${port}`);
+// Pornire server
+const PORT = process.env.PORT || 8000;
+app.listen(PORT, () => {
+  console.log(`🚀 Serverul rulează pe http://localhost:${PORT}`);
 });

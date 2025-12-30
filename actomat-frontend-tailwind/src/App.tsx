@@ -1,8 +1,8 @@
-import { useState, ChangeEvent, DragEvent } from "react";
+import React, { useState, ChangeEvent, DragEvent } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { FiUploadCloud, FiImage, FiX, FiCheck, FiCpu } from "react-icons/fi";
+import { FiUploadCloud, FiCheck, FiCpu, FiX } from "react-icons/fi"; // Am scos FiImage daca nu e folosit
 
-// Definim tipurile de date
+// Definim tipurile pentru rezultat
 interface ExtractionResult {
   [key: string]: string | null;
 }
@@ -29,20 +29,21 @@ function App() {
     setResult(null);
   };
 
-  const onDragOver = (e: DragEvent<HTMLDivElement>) => {
+  // Folosim React.DragEvent pentru a evita conflictele
+  const onDragOver = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
     setIsDragging(true);
   };
 
-  const onDragLeave = (e: DragEvent<HTMLDivElement>) => {
+  const onDragLeave = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
     setIsDragging(false);
   };
 
-  const onDrop = (e: DragEvent<HTMLDivElement>) => {
+  const onDrop = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
     setIsDragging(false);
-    if (e.dataTransfer.files?.length > 0) {
+    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
       handleFile(e.dataTransfer.files[0]);
     }
   };
@@ -56,19 +57,30 @@ function App() {
     formData.append("file", file);
 
     try {
-      // Asigură-te că backend-ul Node.js rulează pe portul 8000
+      // Verificăm conexiunea la portul 8000
       const res = await fetch("http://localhost:8000/extract", {
         method: "POST",
         body: formData,
       });
 
-      if (!res.ok) throw new Error("Eroare conexiune server");
+      if (!res.ok) {
+        // Încercăm să citim eroarea de la server, dacă există
+        const errData = await res.json().catch(() => ({}));
+        throw new Error(errData.error || "Eroare conexiune server");
+      }
 
       const data: ExtractionResult = await res.json();
       setResult(data);
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
-      setError("Nu am putut comunica cu backend-ul.");
+      // Mesaj mai prietenos pentru erori comune
+      if (err.message.includes("Failed to fetch")) {
+        setError(
+          "Nu pot contacta serverul. Verifică dacă backend-ul rulează pe portul 8000."
+        );
+      } else {
+        setError(err.message || "A apărut o eroare necunoscută.");
+      }
     } finally {
       setLoading(false);
     }
@@ -83,7 +95,7 @@ function App() {
 
   const formatKey = (key: string) => key.replace(/_/g, " ");
 
-  // --- UI cu Tailwind ---
+  // --- UI ---
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 flex items-center justify-center p-4">
@@ -92,7 +104,6 @@ function App() {
         animate={{ opacity: 1, scale: 1 }}
         className="w-full max-w-2xl bg-white/90 backdrop-blur-xl rounded-3xl shadow-2xl overflow-hidden border border-white/20"
       >
-        {/* Header */}
         <div className="p-8 text-center border-b border-gray-100">
           <h1 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-indigo-600 to-pink-600 mb-2">
             Actomat AI
