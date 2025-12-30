@@ -1,0 +1,15 @@
+/* src/index.css */
+@import "tailwindcss";
+
+@theme {
+  --font-family-barlow-condensed: "Barlow Condensed", sans-serif;
+  --font-family-bellefair: "Bellefair", serif;
+  --font-family-barlow: "Barlow", sans-serif;
+}
+
+/* Putem adăuga și stiluri globale dacă e nevoie */
+body {
+    font-family: var(--font-family-barlow);
+    background-color: #f3f4f6;
+    margin: 0;
+}

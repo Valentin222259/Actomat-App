@@ -1,0 +1,13 @@
+# Ignoră modulele node (sunt generate automat cu npm install)
+**/node_modules/
+**/dist/
+**/build/
+
+# Ignoră cheile secrete și setările locale
+**/.env
+**/.DS_Store
+
+# Ignoră fișierele specifice Python (dacă ai folosit Python)
+**/__pycache__/
+**/*.py[cod]
+**/venv/
