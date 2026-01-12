@@ -1,0 +1,13 @@
+{
+  "version": 2,
+  "rewrites": [
+    {
+      "source": "/api/(.*)",
+      "destination": "/actomat-node-backend/server.js"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/actomat-frontend-tailwind/$1"
+    }
+  ]
+}

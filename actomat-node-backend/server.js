@@ -6,7 +6,7 @@ const fs = require("fs");
 const cors = require("cors");
 
 const app = express();
-const upload = multer({ dest: "uploads/" });
+const upload = multer({ dest: "/tmp" });
 
 app.use(cors());
 app.use(express.json());
@@ -46,3 +46,5 @@ app.post("/extract", upload.single("file"), async (req, res) => {
 
 const PORT = process.env.PORT || 8000;
 app.listen(PORT, () => console.log(`🚀 Server pe http://localhost:${PORT}`));
+
+module.exports = app;

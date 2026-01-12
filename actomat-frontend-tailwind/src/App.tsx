@@ -22,14 +22,20 @@ function App() {
     formData.append("file", file);
 
     try {
-      const resp = await fetch("http://localhost:8000/extract", {
+      const resp = await fetch("/api/extract", {
         method: "POST",
         body: formData,
       });
+
+      if (!resp.ok) {
+        throw new Error("Eroare la server");
+      }
+
       const result = await resp.json();
       setData(result);
     } catch (err) {
-      alert("Eroare la procesare.");
+      console.error(err);
+      alert("Eroare la procesare. Asigură-te că serverul este pornit.");
     } finally {
       setLoading(false);
     }
