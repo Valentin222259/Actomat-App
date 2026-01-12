@@ -1,257 +1,158 @@
-import React, { useState, ChangeEvent, DragEvent } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { FiUploadCloud, FiCheck, FiCpu, FiX } from "react-icons/fi"; // Am scos FiImage daca nu e folosit
-
-// Definim tipurile pentru rezultat
-interface ExtractionResult {
-  [key: string]: string | null;
-}
+import React, { useState, useRef } from "react";
+import {
+  Camera,
+  Image as ImageIcon,
+  Loader2,
+  CheckCircle,
+  ShieldCheck,
+} from "lucide-react";
 
 function App() {
-  const [file, setFile] = useState<File | null>(null);
-  const [preview, setPreview] = useState<string | null>(null);
+  const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(false);
-  const [result, setResult] = useState<ExtractionResult | null>(null);
-  const [error, setError] = useState<string>("");
-  const [isDragging, setIsDragging] = useState(false);
+  const [preview, setPreview] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // --- Logică ---
-
-  const handleFile = (selected: File | undefined) => {
-    if (!selected) return;
-    if (!selected.type.startsWith("image/")) {
-      setError("Te rog încarcă doar imagini (JPG/PNG).");
-      return;
-    }
-    setError("");
-    setFile(selected);
-    setPreview(URL.createObjectURL(selected));
-    setResult(null);
-  };
-
-  // Folosim React.DragEvent pentru a evita conflictele
-  const onDragOver = (e: React.DragEvent<HTMLDivElement>) => {
-    e.preventDefault();
-    setIsDragging(true);
-  };
-
-  const onDragLeave = (e: React.DragEvent<HTMLDivElement>) => {
-    e.preventDefault();
-    setIsDragging(false);
-  };
-
-  const onDrop = (e: React.DragEvent<HTMLDivElement>) => {
-    e.preventDefault();
-    setIsDragging(false);
-    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
-      handleFile(e.dataTransfer.files[0]);
-    }
-  };
-
-  const handleUpload = async () => {
-    if (!file) return;
+  const handleUpload = async (file: File) => {
+    setPreview(URL.createObjectURL(file));
     setLoading(true);
-    setError("");
+    setData(null);
 
     const formData = new FormData();
     formData.append("file", file);
 
     try {
-      // Verificăm conexiunea la portul 8000
-      const res = await fetch("http://localhost:8000/extract", {
+      const resp = await fetch("http://localhost:8000/extract", {
         method: "POST",
         body: formData,
       });
-
-      if (!res.ok) {
-        // Încercăm să citim eroarea de la server, dacă există
-        const errData = await res.json().catch(() => ({}));
-        throw new Error(errData.error || "Eroare conexiune server");
-      }
-
-      const data: ExtractionResult = await res.json();
-      setResult(data);
-    } catch (err: any) {
-      console.error(err);
-      // Mesaj mai prietenos pentru erori comune
-      if (err.message.includes("Failed to fetch")) {
-        setError(
-          "Nu pot contacta serverul. Verifică dacă backend-ul rulează pe portul 8000."
-        );
-      } else {
-        setError(err.message || "A apărut o eroare necunoscută.");
-      }
+      const result = await resp.json();
+      setData(result);
+    } catch (err) {
+      alert("Eroare la procesare.");
     } finally {
       setLoading(false);
     }
   };
 
-  const reset = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    setFile(null);
-    setPreview(null);
-    setResult(null);
+  const openCamera = () => {
+    if (fileInputRef.current) {
+      fileInputRef.current.setAttribute("capture", "environment"); // Activează camera pe mobil
+      fileInputRef.current.click();
+    }
   };
 
-  const formatKey = (key: string) => key.replace(/_/g, " ");
-
-  // --- UI ---
+  const openGallery = () => {
+    if (fileInputRef.current) {
+      fileInputRef.current.removeAttribute("capture"); // Deschide galeria
+      fileInputRef.current.click();
+    }
+  };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 flex items-center justify-center p-4">
-      <motion.div
-        initial={{ opacity: 0, scale: 0.9 }}
-        animate={{ opacity: 1, scale: 1 }}
-        className="w-full max-w-2xl bg-white/90 backdrop-blur-xl rounded-3xl shadow-2xl overflow-hidden border border-white/20"
-      >
-        <div className="p-8 text-center border-b border-gray-100">
-          <h1 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-indigo-600 to-pink-600 mb-2">
+    <div className="min-h-screen bg-slate-50 font-sans p-4 md:p-8">
+      <div className="max-w-xl mx-auto">
+        {/* Header */}
+        <div className="flex items-center justify-center gap-2 mb-8">
+          <ShieldCheck className="text-indigo-600" size={32} />
+          <h1 className="text-2xl font-bold text-slate-800 tracking-tight">
             Actomat AI
           </h1>
-          <p className="text-gray-500 text-sm font-medium">
-            Extragere date buletin cu Inteligență Artificială
-          </p>
         </div>
 
-        <div className="p-8 space-y-6">
-          {/* Zona Drag & Drop */}
-          <div
-            onDragOver={onDragOver}
-            onDragLeave={onDragLeave}
-            onDrop={onDrop}
-            onClick={() => document.getElementById("hidden-input")?.click()}
-            className={`
-              relative group cursor-pointer transition-all duration-300 ease-in-out
-              border-2 border-dashed rounded-2xl h-64 flex flex-col items-center justify-center
-              ${
-                isDragging
-                  ? "border-indigo-500 bg-indigo-50"
-                  : "border-gray-300 hover:border-indigo-400 hover:bg-gray-50"
-              }
-            `}
-          >
-            <input
-              type="file"
-              id="hidden-input"
-              className="hidden"
-              accept="image/*"
-              onChange={(e) => e.target.files && handleFile(e.target.files[0])}
-            />
+        {/* Card Principal */}
+        <div className="bg-white rounded-3xl shadow-xl shadow-slate-200/60 p-6 border border-slate-100 mb-8">
+          <p className="text-center text-slate-500 mb-6 font-medium">
+            Încarcă buletinul pentru scanare
+          </p>
 
-            <AnimatePresence mode="wait">
-              {!preview ? (
-                <motion.div
-                  key="upload-placeholder"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  className="text-center"
-                >
-                  <div className="bg-indigo-100 p-4 rounded-full inline-flex mb-4 group-hover:scale-110 transition-transform">
-                    <FiUploadCloud className="text-3xl text-indigo-600" />
-                  </div>
-                  <p className="text-gray-600 font-medium">
-                    Trage o imagine aici
-                  </p>
-                  <p className="text-gray-400 text-xs mt-1">
-                    sau click pentru a încărca
-                  </p>
-                </motion.div>
-              ) : (
-                <motion.div
-                  key="preview-image"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  className="relative h-full w-full p-2"
-                >
-                  <img
-                    src={preview}
-                    alt="Preview"
-                    className="w-full h-full object-contain rounded-lg"
-                  />
-                  <button
-                    onClick={reset}
-                    className="absolute top-4 right-4 bg-red-500 hover:bg-red-600 text-white p-2 rounded-full shadow-lg transition-transform hover:scale-110"
-                  >
-                    <FiX />
-                  </button>
-                </motion.div>
-              )}
-            </AnimatePresence>
+          <div className="grid grid-cols-2 gap-4">
+            <button
+              onClick={openCamera}
+              className="flex flex-col items-center gap-3 p-5 rounded-2xl border-2 border-dashed border-indigo-100 hover:border-indigo-500 hover:bg-indigo-50 transition-all group"
+            >
+              <Camera
+                className="text-indigo-600 group-hover:scale-110 transition-transform"
+                size={28}
+              />
+              <span className="text-sm font-semibold text-slate-700">
+                Fă poză
+              </span>
+            </button>
+
+            <button
+              onClick={openGallery}
+              className="flex flex-col items-center gap-3 p-5 rounded-2xl border-2 border-dashed border-slate-100 hover:border-indigo-500 hover:bg-indigo-50 transition-all group"
+            >
+              <ImageIcon
+                className="text-slate-500 group-hover:text-indigo-600 group-hover:scale-110 transition-transform"
+                size={28}
+              />
+              <span className="text-sm font-semibold text-slate-700">
+                Din galerie
+              </span>
+            </button>
           </div>
 
-          {/* Mesaje Eroare */}
-          {error && (
-            <div className="bg-red-50 text-red-600 p-3 rounded-lg text-sm text-center border border-red-100">
-              {error}
+          <input
+            type="file"
+            ref={fileInputRef}
+            onChange={(e) =>
+              e.target.files?.[0] && handleUpload(e.target.files[0])
+            }
+            className="hidden"
+            accept="image/*"
+          />
+
+          {preview && (
+            <div className="mt-6 relative rounded-2xl overflow-hidden aspect-video bg-slate-100 border border-slate-200">
+              <img
+                src={preview}
+                alt="Preview"
+                className="w-full h-full object-contain"
+              />
+              {loading && (
+                <div className="absolute inset-0 bg-white/80 backdrop-blur-sm flex flex-col items-center justify-center">
+                  <Loader2
+                    className="animate-spin text-indigo-600 mb-2"
+                    size={32}
+                  />
+                  <span className="text-sm font-bold text-indigo-900">
+                    Se procesează...
+                  </span>
+                </div>
+              )}
             </div>
           )}
-
-          {/* Buton Acțiune */}
-          <button
-            onClick={handleUpload}
-            disabled={!file || loading}
-            className={`
-              w-full py-4 rounded-xl font-bold text-white shadow-lg flex items-center justify-center gap-2
-              transition-all duration-300
-              ${
-                !file || loading
-                  ? "bg-gray-300 cursor-not-allowed"
-                  : "bg-gradient-to-r from-indigo-600 to-pink-600 hover:shadow-indigo-500/30 hover:-translate-y-1"
-              }
-            `}
-          >
-            {loading ? (
-              <>
-                <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                <span>Se procesează...</span>
-              </>
-            ) : (
-              <>
-                <FiCpu /> Extrage Datele
-              </>
-            )}
-          </button>
-
-          {/* Rezultate */}
-          <AnimatePresence>
-            {result && (
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="bg-gray-50 rounded-xl p-6 border border-gray-100 mt-4"
-              >
-                <h3 className="text-indigo-900 font-bold mb-4 flex items-center gap-2">
-                  <FiCheck className="text-green-500" /> Rezultate Identificate
-                </h3>
-
-                <div className="grid grid-cols-1 gap-3">
-                  {Object.entries(result).map(([key, value], idx) => (
-                    <motion.div
-                      key={key}
-                      initial={{ opacity: 0, x: -10 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: idx * 0.1 }}
-                      className="flex justify-between items-center bg-white p-3 rounded-lg border border-gray-100 shadow-sm"
-                    >
-                      <span className="text-xs uppercase tracking-wider text-gray-400 font-semibold">
-                        {formatKey(key)}
-                      </span>
-                      <span
-                        className={`font-medium ${
-                          value ? "text-gray-800" : "text-gray-300 italic"
-                        }`}
-                      >
-                        {value || "Nedetectat"}
-                      </span>
-                    </motion.div>
-                  ))}
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
         </div>
-      </motion.div>
+
+        {/* Rezultate */}
+        {data && (
+          <div className="bg-white rounded-3xl shadow-lg border border-slate-100 overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-500">
+            <div className="bg-indigo-600 px-6 py-4 flex items-center justify-between text-white">
+              <span className="font-bold tracking-wide uppercase text-xs text-indigo-100">
+                Date identificate
+              </span>
+              <CheckCircle size={18} />
+            </div>
+            <div className="p-6 grid grid-cols-1 gap-y-4">
+              {Object.entries(data).map(([key, value]: [string, any]) => (
+                <div
+                  key={key}
+                  className="flex flex-col border-b border-slate-50 pb-2"
+                >
+                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                    {key.replace("_", " ")}
+                  </span>
+                  <span className="text-slate-800 font-medium">
+                    {value || "Nespecificat"}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
