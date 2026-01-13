@@ -1,13 +1,17 @@
 require("dotenv").config();
 const express = require("express");
 const multer = require("multer");
-const { GoogleGenerativeAI } = require("@google/generative-ai");
+// PASUL 1: Modifică importul pentru a include HarmCategory și HarmBlockThreshold
+const {
+  GoogleGenerativeAI,
+  HarmCategory,
+  HarmBlockThreshold,
+} = require("@google/generative-ai");
 const fs = require("fs");
 const cors = require("cors");
 
 const app = express();
-const storage = multer.memoryStorage();
-const upload = multer({ storage: storage });
+const upload = multer({ dest: "/tmp" });
 
 app.use(cors());
 app.use(express.json());
@@ -15,7 +19,7 @@ app.use(express.json());
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
 const model = genAI.getGenerativeModel({
-  model: "gemini-1.5-flash",
+  model: "gemini-1.5-flash", // sau încearcă "gemini-1.5-flash-latest" dacă tot dă 404
   generationConfig: { responseMimeType: "application/json" },
 });
 
@@ -24,11 +28,12 @@ app.post("/extract", upload.single("file"), async (req, res) => {
     if (!req.file) return res.status(400).json({ error: "Fișier lipsă." });
 
     const imagePath = req.file.path;
-    const imageData = req.file.buffer.toString("base64");
+    const imageData = fs.readFileSync(imagePath).toString("base64");
 
+    // Adăugăm instrucțiuni stricte în prompt
     const prompt = `Extrage datele din acest buletin românesc. 
-    Returnează un obiect JSON pur, fără marcaje markdown, cu următoarele chei: 
-    cnp, nume, prenume, cetatenie, locul_nasterii, domiciliu, emis_de, data_nasterii, data_emiterii, data_expirarii, serie, numar, sex.`;
+    Returnează EXCLUSIV un obiect JSON, fără alte explicații sau marcaje Markdown.
+    Câmpuri: cnp, nume, prenume, cetatenie, locul_nasterii, domiciliu, emis_de, data_nasterii, data_emiterii, data_expirarii, serie, numar, sex.`;
 
     const result = await model.generateContent([
       prompt,
@@ -37,31 +42,25 @@ app.post("/extract", upload.single("file"), async (req, res) => {
 
     let text = result.response.text();
 
-    text = text
+    // Curățăm textul de posibile marcaje Markdown
+    const cleanJson = text
       .replace(/```json/g, "")
       .replace(/```/g, "")
       .trim();
 
-    console.log("Răspuns procesat:", text);
-
     try {
-      const responseData = JSON.parse(text);
+      const responseData = JSON.parse(cleanJson);
       res.json(responseData);
     } catch (parseError) {
-      console.error("Eroare la parsare JSON:", text);
-      res.status(500).json({
-        error: "Formatul răspunsului de la AI este invalid.",
-        raw: text,
-      });
+      console.error("Eroare la parsare JSON. Text primit:", text);
+      res.status(500).json({ error: "Format AI invalid", raw: text });
     }
 
     if (fs.existsSync(imagePath)) fs.unlinkSync(imagePath);
   } catch (error) {
-    console.error("Eroare server detaliată:", error);
-    res.status(500).json({
-      error: "Eroare la procesarea imaginii.",
-      message: error.message,
-    });
+    // Afișăm eroarea exactă în consolă pentru a vedea dacă e de la API Key sau filtre de siguranță
+    console.error("Eroare detaliată Gemini:", error);
+    res.status(500).json({ error: "Eroare server", message: error.message });
   }
 });
 

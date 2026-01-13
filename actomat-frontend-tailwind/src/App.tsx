@@ -22,7 +22,7 @@ function App() {
     formData.append("file", file);
 
     try {
-      const resp = await fetch("https://actomat-app-1.onrender.com/extract", {
+      const resp = await fetch("http://localhost:8000/extract", {
         method: "POST",
         body: formData,
       });
