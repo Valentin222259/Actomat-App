@@ -22,13 +22,10 @@ function App() {
     formData.append("file", file);
 
     try {
-      const resp = await fetch(
-        "https://nume-proiect-backend.onrender.com/extract",
-        {
-          method: "POST",
-          body: formData,
-        }
-      );
+      const resp = await fetch("https://actomat-app.onrender.com/", {
+        method: "POST",
+        body: formData,
+      });
 
       if (!resp.ok) {
         throw new Error("Eroare la server");
