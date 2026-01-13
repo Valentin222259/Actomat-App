@@ -6,7 +6,8 @@ const fs = require("fs");
 const cors = require("cors");
 
 const app = express();
-const upload = multer({ dest: "/tmp" });
+const storage = multer.memoryStorage();
+const upload = multer({ storage: storage });
 
 app.use(cors());
 app.use(express.json());
@@ -23,10 +24,10 @@ app.post("/extract", upload.single("file"), async (req, res) => {
     if (!req.file) return res.status(400).json({ error: "Fișier lipsă." });
 
     const imagePath = req.file.path;
-    const imageData = fs.readFileSync(imagePath).toString("base64");
+    const imageData = req.file.buffer.toString("base64");
 
     const prompt = `Extrage datele din acest buletin românesc. 
-    Returnează un obiect JSON cu următoarele chei: 
+    Returnează un obiect JSON pur, fără marcaje markdown, cu următoarele chei: 
     cnp, nume, prenume, cetatenie, locul_nasterii, domiciliu, emis_de, data_nasterii, data_emiterii, data_expirarii, serie, numar, sex.`;
 
     const result = await model.generateContent([
@@ -34,13 +35,33 @@ app.post("/extract", upload.single("file"), async (req, res) => {
       { inlineData: { data: imageData, mimeType: req.file.mimetype } },
     ]);
 
-    const responseData = JSON.parse(result.response.text());
+    let text = result.response.text();
 
-    fs.unlinkSync(imagePath);
-    res.json(responseData);
+    text = text
+      .replace(/```json/g, "")
+      .replace(/```/g, "")
+      .trim();
+
+    console.log("Răspuns procesat:", text);
+
+    try {
+      const responseData = JSON.parse(text);
+      res.json(responseData);
+    } catch (parseError) {
+      console.error("Eroare la parsare JSON:", text);
+      res.status(500).json({
+        error: "Formatul răspunsului de la AI este invalid.",
+        raw: text,
+      });
+    }
+
+    if (fs.existsSync(imagePath)) fs.unlinkSync(imagePath);
   } catch (error) {
-    console.error("Eroare server:", error);
-    res.status(500).json({ error: "Eroare la procesarea imaginii." });
+    console.error("Eroare server detaliată:", error);
+    res.status(500).json({
+      error: "Eroare la procesarea imaginii.",
+      message: error.message,
+    });
   }
 });
 
