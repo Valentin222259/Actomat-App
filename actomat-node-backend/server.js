@@ -45,6 +45,9 @@ app.post("/extract", upload.single("file"), async (req, res) => {
 });
 
 const PORT = process.env.PORT || 8000;
+app.get("/", (req, res) => {
+  res.send("Serverul Actomat funcționează!");
+});
 app.listen(PORT, () => console.log(`🚀 Server pe http://localhost:${PORT}`));
 
 module.exports = app;
