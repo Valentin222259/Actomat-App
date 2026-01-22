@@ -1,13 +1,13 @@
+
 {
-  "version": 2,
-  "rewrites": [
-    {
-      "source": "/api/(.*)",
-      "destination": "/actomat-node-backend/server.js"
-    },
-    {
-      "source": "/(.*)",
-      "destination": "/actomat-frontend-tailwind/$1"
+  "buildCommand": "cd actomat-frontend-tailwind && npm run build",
+  "outputDirectory": "actomat-frontend-tailwind/dist",
+  "env": {
+    "GEMINI_API_KEY": "@gemini_api_key"
+  },
+  "functions": {
+    "actomat-node-backend/server.js": {
+      "runtime": "nodejs18.x"
     }
-  ]
+  }
 }

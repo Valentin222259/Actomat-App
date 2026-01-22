@@ -5,40 +5,66 @@ import {
   Loader2,
   CheckCircle,
   ShieldCheck,
+  AlertCircle,
 } from "lucide-react";
 
+interface ExtractedData {
+  [key: string]: string;
+}
+
 function App() {
-  const [data, setData] = useState<any>(null);
+  const [data, setData] = useState<ExtractedData | null>(null);
   const [loading, setLoading] = useState(false);
   const [preview, setPreview] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleUpload = async (file: File) => {
-    setPreview(URL.createObjectURL(file));
-    setLoading(true);
+    // Reset state
+    setError(null);
     setData(null);
 
-    const formData = new FormData();
-    formData.append("file", file);
+    // Validate file
+    if (!file.type.startsWith("image/")) {
+      setError("Please select an image file");
+      return;
+    }
+
+    if (file.size > 10 * 1024 * 1024) {
+      setError("File size must be under 10MB");
+      return;
+    }
+
+    // Show preview
+    setPreview(URL.createObjectURL(file));
+    setLoading(true);
 
     try {
-      const resp = await fetch("http://localhost:8000/extract", {
+      const formData = new FormData();
+      formData.append("file", file);
+
+      // ✅ Use /api path - will be proxied to backend
+      const response = await fetch("/api/extract", {
         method: "POST",
         body: formData,
       });
 
-      const result = await resp.json(); // Citim JSON-ul chiar dacă e eroare
-
-      if (!resp.ok) {
-        // Afișăm în consolă eroarea reală venită de la server (ex: API key invalid)
-        console.error("Eroare Backend:", result);
-        throw new Error(result.message || "Eroare la server");
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || `Server error: ${response.status}`);
       }
 
-      setData(result);
-    } catch (err: any) {
-      console.error(err);
-      alert(`Eroare: ${err.message}`);
+      const result = await response.json();
+
+      if (!result.success) {
+        throw new Error(result.error);
+      }
+
+      setData(result.data);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Unknown error";
+      setError(message);
+      console.error("Upload error:", err);
     } finally {
       setLoading(false);
     }
@@ -46,63 +72,66 @@ function App() {
 
   const openCamera = () => {
     if (fileInputRef.current) {
-      fileInputRef.current.setAttribute("capture", "environment"); // Activează camera pe mobil
+      fileInputRef.current.setAttribute("capture", "environment");
       fileInputRef.current.click();
     }
   };
 
   const openGallery = () => {
     if (fileInputRef.current) {
-      fileInputRef.current.removeAttribute("capture"); // Deschide galeria
+      fileInputRef.current.removeAttribute("capture");
       fileInputRef.current.click();
     }
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 font-sans p-4 md:p-8">
-      <div className="max-w-xl mx-auto">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 font-sans p-4 md:p-8">
+      <div className="max-w-2xl mx-auto">
         {/* Header */}
-        <div className="flex items-center justify-center gap-2 mb-8">
-          <ShieldCheck className="text-indigo-600" size={32} />
-          <h1 className="text-2xl font-bold text-slate-800 tracking-tight">
-            Actomat AI
-          </h1>
+        <div className="flex items-center justify-center gap-3 mb-12">
+          <ShieldCheck className="text-indigo-600" size={36} />
+          <div>
+            <h1 className="text-3xl font-bold text-slate-900">Actomat AI</h1>
+            <p className="text-sm text-slate-500">ID Document Scanner</p>
+          </div>
         </div>
 
-        {/* Card Principal */}
-        <div className="bg-white rounded-3xl shadow-xl shadow-slate-200/60 p-6 border border-slate-100 mb-8">
-          <p className="text-center text-slate-500 mb-6 font-medium">
-            Încarcă buletinul pentru scanare
+        {/* Main Card */}
+        <div className="bg-white rounded-2xl shadow-lg border border-slate-100 p-8 mb-8">
+          <p className="text-center text-slate-600 mb-8 font-medium">
+            Scan your Romanian ID document
           </p>
 
-          <div className="grid grid-cols-2 gap-4">
+          {/* Upload Buttons */}
+          <div className="grid grid-cols-2 gap-4 mb-8">
             <button
               onClick={openCamera}
-              className="flex flex-col items-center gap-3 p-5 rounded-2xl border-2 border-dashed border-indigo-100 hover:border-indigo-500 hover:bg-indigo-50 transition-all group"
+              className="flex flex-col items-center gap-3 p-6 rounded-xl border-2 border-dashed border-indigo-200 hover:border-indigo-500 hover:bg-indigo-50 transition-all group"
             >
               <Camera
                 className="text-indigo-600 group-hover:scale-110 transition-transform"
-                size={28}
+                size={32}
               />
               <span className="text-sm font-semibold text-slate-700">
-                Fă poză
+                Take Photo
               </span>
             </button>
 
             <button
               onClick={openGallery}
-              className="flex flex-col items-center gap-3 p-5 rounded-2xl border-2 border-dashed border-slate-100 hover:border-indigo-500 hover:bg-indigo-50 transition-all group"
+              className="flex flex-col items-center gap-3 p-6 rounded-xl border-2 border-dashed border-slate-200 hover:border-indigo-500 hover:bg-indigo-50 transition-all group"
             >
               <ImageIcon
-                className="text-slate-500 group-hover:text-indigo-600 group-hover:scale-110 transition-transform"
-                size={28}
+                className="text-slate-500 group-hover:text-indigo-600 group-hover:scale-110 transition-all"
+                size={32}
               />
               <span className="text-sm font-semibold text-slate-700">
-                Din galerie
+                From Gallery
               </span>
             </button>
           </div>
 
+          {/* File Input */}
           <input
             type="file"
             ref={fileInputRef}
@@ -113,51 +142,66 @@ function App() {
             accept="image/*"
           />
 
+          {/* Preview */}
           {preview && (
-            <div className="mt-6 relative rounded-2xl overflow-hidden aspect-video bg-slate-100 border border-slate-200">
+            <div className="mb-8 relative rounded-xl overflow-hidden aspect-video bg-slate-100 border border-slate-200">
               <img
                 src={preview}
                 alt="Preview"
                 className="w-full h-full object-contain"
               />
               {loading && (
-                <div className="absolute inset-0 bg-white/80 backdrop-blur-sm flex flex-col items-center justify-center">
+                <div className="absolute inset-0 bg-white/90 backdrop-blur-sm flex flex-col items-center justify-center">
                   <Loader2
-                    className="animate-spin text-indigo-600 mb-2"
-                    size={32}
+                    className="animate-spin text-indigo-600 mb-3"
+                    size={40}
                   />
                   <span className="text-sm font-bold text-indigo-900">
-                    Se procesează...
+                    Processing document...
                   </span>
                 </div>
               )}
             </div>
           )}
+
+          {/* Error Message */}
+          {error && (
+            <div className="mb-8 p-4 bg-red-50 border border-red-200 rounded-lg flex items-start gap-3">
+              <AlertCircle
+                className="text-red-600 flex-shrink-0 mt-0.5"
+                size={20}
+              />
+              <div>
+                <p className="font-semibold text-red-900">Error</p>
+                <p className="text-sm text-red-700 mt-1">{error}</p>
+              </div>
+            </div>
+          )}
         </div>
 
-        {/* Rezultate */}
-        {data && (
-          <div className="bg-white rounded-3xl shadow-lg border border-slate-100 overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-500">
-            <div className="bg-indigo-600 px-6 py-4 flex items-center justify-between text-white">
-              <span className="font-bold tracking-wide uppercase text-xs text-indigo-100">
-                Date identificate
+        {/* Results */}
+        {data && !loading && (
+          <div className="bg-white rounded-2xl shadow-lg border border-slate-100 overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-500">
+            <div className="bg-gradient-to-r from-indigo-600 to-indigo-700 px-8 py-6 flex items-center justify-between">
+              <span className="font-bold tracking-wide uppercase text-sm text-white">
+                Extracted Data
               </span>
-              <CheckCircle size={18} />
+              <CheckCircle size={24} className="text-indigo-100" />
             </div>
-            <div className="p-6 grid grid-cols-1 gap-y-4">
-              {Object.entries(data).map(([key, value]: [string, any]) => (
-                <div
-                  key={key}
-                  className="flex flex-col border-b border-slate-50 pb-2"
-                >
-                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-                    {key.replace("_", " ")}
-                  </span>
-                  <span className="text-slate-800 font-medium">
-                    {value || "Nespecificat"}
-                  </span>
-                </div>
-              ))}
+
+            <div className="p-8">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {Object.entries(data).map(([key, value]) => (
+                  <div key={key} className="border-b border-slate-100 pb-4">
+                    <label className="text-xs font-bold text-slate-500 uppercase tracking-widest block mb-2">
+                      {key.replace(/_/g, " ")}
+                    </label>
+                    <p className="text-slate-800 font-medium text-lg">
+                      {value || "—"}
+                    </p>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
         )}
