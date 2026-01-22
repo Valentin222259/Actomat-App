@@ -43,7 +43,7 @@ app.post("/extract", upload.single("file"), async (req, res) => {
     console.log(`📷 Procesez imagine: ${req.file.originalname} (${mimeType})`);
 
     const model = genAI.getGenerativeModel({
-      model: "gemini-2.0-flash-exp", // ← SCHIMBĂ ASTA
+      model: "gemini-1.5-flash-latest", // ← SCHIMBĂ ASTA
       generationConfig: {
         responseMimeType: "application/json",
         temperature: 0.1,

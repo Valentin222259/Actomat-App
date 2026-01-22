@@ -27,15 +27,18 @@ function App() {
         body: formData,
       });
 
+      const result = await resp.json(); // Citim JSON-ul chiar dacă e eroare
+
       if (!resp.ok) {
-        throw new Error("Eroare la server");
+        // Afișăm în consolă eroarea reală venită de la server (ex: API key invalid)
+        console.error("Eroare Backend:", result);
+        throw new Error(result.message || "Eroare la server");
       }
 
-      const result = await resp.json();
       setData(result);
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
-      alert("Eroare la procesare. Asigură-te că serverul este pornit.");
+      alert(`Eroare: ${err.message}`);
     } finally {
       setLoading(false);
     }
