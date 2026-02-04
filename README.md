@@ -31,7 +31,7 @@ The repository is organized into two main services:
 └── vercel.json                 # Deployment configuration
 ```
 
-🛠️ Getting Started
+## 🛠️ Getting Started
 Installation
 Clone the repository:
 
