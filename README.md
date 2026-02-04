@@ -1,102 +1,102 @@
 # Actomat App
 
-Actomat este o aplicație web full-stack pentru procesarea și analiza documentelor folosind Optical Character Recognition (OCR). Ideală pentru extragerea textului din imagini sau documente scanate în limba **engleză** și **română**.
+Actomat is a full-stack web application for processing and analyzing documents using Optical Character Recognition (OCR). Ideal for extracting text from images or scanned documents in **English** and **Romanian**.
 
-Proiectul demonstrează o arhitectură modernă tip **Monorepo**, cu separarea logicii client-side de capacitățile server-side.
+The project demonstrates a modern **Monorepo-style** architecture, with clear separation between client-side logic and server-side processing capabilities.
 
-## 🚀 Stack Tehnologic
+## 🚀 Tech Stack
 
 ### Frontend
 - **Framework:** React 18
-- **Limbaj:** TypeScript
+- **Language:** TypeScript
 - **Styling:** Tailwind CSS
 - **Build Tool:** Vite
 - **Linting:** ESLint
 
 ### Backend
 - **Runtime:** Node.js
-- **Framework API:** Express.js
-- **Motor OCR:** Tesseract.js (modele custom: `eng`, `ron`)
+- **API Framework:** Express.js
+- **OCR Engine:** Tesseract.js (custom models: `eng`, `ron`)
 
 ### Deployment
-- **Platformă:** Vercel
+- **Platform:** Vercel
 
-## 📂 Structura Proiectului
+## 📂 Project Structure
 
 ```
 actomat-app/
-├── actomat-frontend-tailwind/    # Client React + TypeScript
-├── actomat-node-backend/         # API Node.js & Motor OCR
-└── vercel.json                   # Configurare deployment
+├── actomat-frontend-tailwind/    # React + TypeScript Client
+├── actomat-node-backend/         # Node.js API & OCR Engine
+└── vercel.json                   # Deployment configuration
 ```
 
-## ⚙️ Instalare și Setup
+## ⚙️ Installation & Setup
 
-### 1. Clonează repository-ul
+### 1. Clone the Repository
 ```bash
 git clone https://github.com/valentin222259/actomat-app.git
 cd actomat-app
 ```
 
-### 2. Setup Frontend
+### 2. Frontend Setup
 ```bash
 cd actomat-frontend-tailwind
 npm install
 npm run dev
 ```
 
-Frontend-ul va fi disponibil la `http://localhost:5173` (Vite default port).
+The frontend will be available at `http://localhost:5173` (Vite default port).
 
-### 3. Setup Backend
+### 3. Backend Setup
 ```bash
 cd ../actomat-node-backend
 npm install
 node server.js
 ```
 
-Backend-ul va rula pe portul configurat (verifică `server.js` pentru detalii).
+The backend will run on the configured port (check `server.js` for details).
 
-## ✨ Funcționalități Principale
+## ✨ Key Features
 
-- **UI Rapid și Modern:** Construit cu React și optimizat cu Vite pentru performanță maximă
-- **OCR Avansat:** Integrare cu Tesseract.js cu modele antrenate pentru engleză și română
-- **Full-Stack Integration:** Comunicare seamless între frontend și backend
-- **Deployment Simplu:** Configurat pentru Vercel pentru deploy ușor
+- **Fast & Modern UI:** Built with React and optimized with Vite for maximum performance
+- **Advanced OCR:** Integration with Tesseract.js with trained models for English and Romanian
+- **Full-Stack Integration:** Seamless communication between frontend and backend
+- **Easy Deployment:** Configured for Vercel for straightforward deployments
 
-## 🎯 Cum Funcționează
+## 🎯 How It Works
 
-1. **Utilizatorul încarcă o imagine** (JPG, PNG, etc.) prin interfața React
-2. **Frontend trimite imaginea** la backend via API
-3. **Backend procesează** imaginea cu Tesseract.js (OCR)
-4. **Textul extras** este trimis înapoi și afișat în frontend
-5. **Utilizatorul poate descărca** sau copia textul extras
+1. **User uploads an image** (JPG, PNG, etc.) through the React interface
+2. **Frontend sends the image** to backend via API
+3. **Backend processes** the image with Tesseract.js (OCR)
+4. **Extracted text** is sent back and displayed in the frontend
+5. **User can download** or copy the extracted text
 
-## 📋 Cerințe Minime
+## 📋 Requirements
 
 - Node.js >= 14.x
 - npm >= 6.x
-- Browser modern (Chrome, Firefox, Safari, Edge)
+- Modern browser (Chrome, Firefox, Safari, Edge)
 
-## 🔧 Variabile de Mediu
+## 🔧 Environment Variables
 
-Backend ar putea necesita variabile de mediu. Crează un fișier `.env` în `actomat-node-backend/`:
+The backend may require environment variables. Create a `.env` file in `actomat-node-backend/`:
 
 ```
 PORT=5000
 NODE_ENV=development
 ```
 
-## 📝 Licență
+## 📝 License
 
 MIT
 
-## 👨‍💻 Contribuții
+## 👨‍💻 Contributing
 
-Sunt binevenit pull requests și suggestions de îmbunătățiri!
+Pull requests and improvement suggestions are welcome!
 
 ## 📧 Contact
 
-Pentru întrebări sau sugestii, deschide un issue pe GitHub.
+For questions or suggestions, please open an issue on GitHub.
 
 ---
 
