@@ -29,8 +29,9 @@ The repository is organized into two main services:
 ├── actomat-frontend-tailwind/  # The React + TypeScript Client
 ├── actomat-node-backend/       # The Node.js API & OCR Engine
 └── vercel.json                 # Deployment configuration
+```
 
-## 🛠️ Getting Started
+🛠️ Getting Started
 Installation
 Clone the repository:
 
