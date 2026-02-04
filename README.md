@@ -29,3 +29,29 @@ The repository is organized into two main services:
 ├── actomat-frontend-tailwind/  # The React + TypeScript Client
 ├── actomat-node-backend/       # The Node.js API & OCR Engine
 └── vercel.json                 # Deployment configuration
+
+🛠️ Getting Started
+Installation
+Clone the repository:
+
+Bash
+git clone [https://github.com/valentin222259/actomat-app.git](https://github.com/valentin222259/actomat-app.git)
+Setup Frontend:
+
+Bash
+cd actomat-frontend-tailwind
+npm install
+npm run dev
+Setup Backend:
+
+Bash
+cd actomat-node-backend
+npm install
+node server.js
+🌟 Key Features
+Fast UI: Built with React and optimized with Vite.
+
+OCR Capability: Backend integration with trained data models for English and Romanian text recognition.
+
+📝 License
+MIT
