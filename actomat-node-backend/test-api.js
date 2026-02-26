@@ -5,7 +5,7 @@ async function checkModels() {
   console.log("🚀 Interogare directă Google API...");
 
   try {
-    // Încercăm să listăm modelele folosind endpoint-ul stabil v1
+    // Încercam să listam modelele folosind endpoint-ul stabil v1
     const url = `https://generativelanguage.googleapis.com/v1/models?key=${apiKey}`;
     const response = await fetch(url);
     const data = await response.json();

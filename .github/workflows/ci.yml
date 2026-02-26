@@ -1,6 +1,6 @@
 name: Actomat CI Pipeline
 
-# Când se ruleaza? La orice push pe branch-ul main
+# Cand se ruleaza? La orice push pe branch-ul main
 on:
   push:
     branches: [main]

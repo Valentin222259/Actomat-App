@@ -8,11 +8,11 @@ const { GoogleGenerativeAI } = require("@google/generative-ai");
 
 const app = express();
 
-// ✅ Configurare Gemini AI
+// Configurare Gemini AI
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
 
-// ✅ Configurare multer pentru upload
+// Configurare multer pentru upload
 const uploadsDir = path.join(__dirname, "uploads");
 if (!fs.existsSync(uploadsDir)) {
   fs.mkdirSync(uploadsDir, { recursive: true });
@@ -43,10 +43,10 @@ const upload = multer({
 app.use(cors());
 app.use(express.json());
 
-// ✅ Funcție utilitară pentru pauză (folosită la retry)
+// ✅ Functie utilitara pentru pauza (folosita la retry)
 const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
-// ✅ Funcție pentru a converti fișierul local în format compatibil Gemini
+// ✅ Functie pentru a converti fisierul local in format compatibil Gemini
 function fileToGenerativePart(path, mimeType) {
   return {
     inlineData: {
@@ -56,7 +56,7 @@ function fileToGenerativePart(path, mimeType) {
   };
 }
 
-// ✅ Funcție de apelare Gemini cu logică de RETRY
+// ✅ Funcție de apelare Gemini cu logica de RETRY
 async function generateContentWithRetry(prompt, imagePart, maxRetries = 3) {
   let lastError;
 
@@ -67,7 +67,7 @@ async function generateContentWithRetry(prompt, imagePart, maxRetries = 3) {
     } catch (error) {
       lastError = error;
 
-      // Dacă eroarea este 429 (Rate Limit), așteptăm și încercăm din nou
+      // Daca eroarea este 429 (Rate Limit), asteptam si incercam din nou
       if (error.message.includes("429") || error.status === 429) {
         const delay = (i + 1) * 3000; // 3s, 6s, 9s
         console.warn(
@@ -77,14 +77,14 @@ async function generateContentWithRetry(prompt, imagePart, maxRetries = 3) {
         continue;
       }
 
-      // Dacă este altă eroare, o aruncăm imediat
+      // Dacă este alta eroare, o aruncam imediat
       throw error;
     }
   }
   throw lastError;
 }
 
-// ✅ Endpoint-ul principal de extracție
+// ✅ Endpoint-ul principal de extractie
 app.post("/api/extract", upload.single("file"), async (req, res) => {
   let tempFilePath = null;
 
@@ -108,11 +108,11 @@ app.post("/api/extract", upload.single("file"), async (req, res) => {
       Respond ONLY with the JSON object, no other text.
     `;
 
-    // Apelăm funcția cu retry
+    // Apelam functia cu retry
     const response = await generateContentWithRetry(prompt, imagePart);
     let text = response.text();
 
-    // Curățare Markdown dacă există
+    // Curatare Markdown daca exista
     text = text.replace(/```json|```/g, "").trim();
 
     const extractedData = JSON.parse(text);
