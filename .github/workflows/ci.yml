@@ -56,3 +56,20 @@ jobs:
 
       - name: Install dependencies (Backend)
         run: npm ci
+
+        # JOB 3: Analiza de securitate pentru întregul Monorepo
+  sonarcloud-check:
+    name: SonarCloud Security Scan
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # Istoricul complet pentru SonarCloud
+
+      - name: SonarCloud Scan
+        uses: SonarSource/sonarqube-scan-action@master
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_HOST_URL: "https://sonarcloud.io"
