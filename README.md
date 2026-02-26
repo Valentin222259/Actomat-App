@@ -102,7 +102,7 @@ The backend will run on `http://localhost:5000` (or your configured port).
 To run the backend properly, create a `.env` file inside the `actomat-node-backend/` directory with the following keys:
 
 ```env
-PORT=5000
+PORT=8000
 NODE_ENV=development
 GEMINI_API_KEY=AIzaSyBiYNLDvoExGGwtj_9kI_pCeY_N6fP1YyM
 ```
