@@ -1,0 +1,58 @@
+name: Actomat CI Pipeline
+
+# Când se ruleaza? La orice push pe branch-ul main
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  # JOB 1: Verificarea Frontend-ului
+  build-frontend:
+    name: Build Frontend (React)
+    runs-on: ubuntu-latest
+    # Spunem serverului sa intre in folderul de frontend inainte sa ruleze comenzile
+    defaults:
+      run:
+        working-directory: ./actomat-frontend-tailwind
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: "npm"
+          cache-dependency-path: "./actomat-frontend-tailwind/package-lock.json"
+
+      - name: Install dependencies (Frontend)
+        run: npm ci
+
+      - name: Run Build (Frontend)
+        run: npm run build
+
+  # JOB 2: Verificarea Backend-ului
+  build-backend:
+    name: Test Backend (Node.js)
+    runs-on: ubuntu-latest
+    # Spunem serverului sa intre in folderul de backend
+    defaults:
+      run:
+        working-directory: ./actomat-node-backend
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: "npm"
+          cache-dependency-path: "./actomat-node-backend/package-lock.json"
+
+      - name: Install dependencies (Backend)
+        run: npm ci
