@@ -104,7 +104,7 @@ To run the backend properly, create a `.env` file inside the `actomat-node-backe
 ```env
 PORT=8000
 NODE_ENV=development
-GEMINI_API_KEY=AIzaSyBiYNLDvoExGGwtj_9kI_pCeY_N6fP1YyM
+GEMINI_API_KEY=your_google_gemini_api_key_here
 ```
 
 ---
