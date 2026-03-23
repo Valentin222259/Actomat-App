@@ -43,10 +43,10 @@ const upload = multer({
 app.use(cors());
 app.use(express.json());
 
-// ✅ Functie utilitara pentru pauza (folosita la retry)
+// Functie utilitara pentru pauza (folosita la retry)
 const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
-// ✅ Functie pentru a converti fisierul local in format compatibil Gemini
+// Functie pentru a converti fisierul local in format compatibil Gemini
 function fileToGenerativePart(path, mimeType) {
   return {
     inlineData: {
@@ -56,7 +56,7 @@ function fileToGenerativePart(path, mimeType) {
   };
 }
 
-// ✅ Funcție de apelare Gemini cu logica de RETRY
+// Funcție de apelare Gemini cu logica de RETRY
 async function generateContentWithRetry(prompt, imagePart, maxRetries = 3) {
   let lastError;
 
@@ -84,7 +84,7 @@ async function generateContentWithRetry(prompt, imagePart, maxRetries = 3) {
   throw lastError;
 }
 
-// ✅ Endpoint-ul principal de extractie
+// Endpoint-ul principal de extractie
 app.post("/api/extract", upload.single("file"), async (req, res) => {
   let tempFilePath = null;
 
